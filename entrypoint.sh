@@ -41,6 +41,7 @@ setup_iptables() {
 }
 
 cleanup() {
+  log " >>> An2Kin >>> "
   log " >>> An2Kin >>> Cleaning up iptables and redsocks..."
   iptables -t nat -F REDSOCKS 2>/dev/null || true
   iptables -t nat -D OUTPUT -p tcp -j REDSOCKS 2>/dev/null || true
