@@ -9,7 +9,7 @@ RUN apk update \
     && apk add --no-cache ca-certificates ca-certificates-bundle bash curl dos2unix tzdata iptables redsocks zlib libgcc libstdc++ musl icu-libs \
     && update-ca-certificates
 
-COPY --from=source /app/Cli /app/traffmonetizerCLI
+COPY --from=source /usr/local/bin/cli /app/traffmonetizerCLI
 
 COPY entrypoint.sh /entrypoint.sh
 
