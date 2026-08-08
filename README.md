@@ -25,9 +25,9 @@ sudo sysctl -w net.core.wmem_max=8000000
 ## Environment variables
 | Variable | Requirement | Description |
 |----------|-------------|-------------|
-| `APPKEY` | Required    | Your Traffmonetizer token. Container exits if not provided. |
+| `TOKEN`  | Required    | Your Traffmonetizer token. Container exits if not provided. |
 | `DEVNAME`| Required    | Device name. Container exits if not provided. |
-| `PROXY`  | Optional    | External proxy endpoint in the form `host:port`. |
+| `PROXY`  | Optional    | External proxy endpoint. Formats: `host:port` or `user:password@host:port`. |
 
 ## Run
 ```bash
@@ -39,6 +39,21 @@ docker run -d \
   -e TOKEN=AbCdEfGhIjKLmNo \
   -e DEVNAME=C0MPUT3R-0001 \
   -e PROXY=123.456.789.012:34567 \
+  techroy23/docker-traffmonetizer:latest
+```
+
+## Authenticated proxy example
+If your SOCKS5 proxy requires credentials, include them in `PROXY` in the form `user:password@host:port`:
+
+```bash
+docker run -d \
+  --name=traffmonetizer \
+  --cpus=0.25 --pull=always --restart=always \
+  --log-driver=json-file --log-opt max-size=1m --log-opt max-file=1 \
+  --cap-add=NET_ADMIN --cap-add=NET_RAW --sysctl net.ipv4.ip_forward=1 \
+  -e TOKEN=AbCdEfGhIjKLmNo \
+  -e DEVNAME=C0MPUT3R-0001 \
+  -e PROXY=myuser:mypassword@123.456.789.012:34567 \
   techroy23/docker-traffmonetizer:latest
 ```
 
