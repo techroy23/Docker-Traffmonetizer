@@ -6,7 +6,7 @@ WORKDIR /app
 
 RUN apk update \
     && apk upgrade --no-cache \
-    && apk add --no-cache ca-certificates ca-certificates-bundle bash curl dos2unix tzdata iptables redsocks zlib libgcc libstdc++ musl icu-libs \
+    && apk add --no-cache ca-certificates ca-certificates-bundle bash curl dos2unix tzdata iptables redsocks zlib libgcc libstdc++ musl icu-libs jq \
     && update-ca-certificates
 
 COPY --from=source /usr/local/bin/cli /app/traffmonetizerCLI

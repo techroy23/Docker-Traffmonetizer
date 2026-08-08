@@ -207,10 +207,65 @@ check_ip() {
   fi
 }
 
+# --- Exit IP monitor -------------------------------------------------------
+# Curls the ip.12388321.xyz JSON endpoint once shortly after redsocks is up,
+# then repeats every EXIT_IP_MONITOR_INTERVAL seconds (default 15 minutes).
+# Because outbound TCP is transparently redirected through redsocks via
+# iptables, the reported IP is the proxy's exit IP - a live check that the
+# proxy route is actually working.
+EXIT_IP_CHECK_URL="${EXIT_IP_CHECK_URL:-https://ip.12388321.xyz/}"
+EXIT_IP_MONITOR_INTERVAL="${EXIT_IP_MONITOR_INTERVAL:-900}"
+EXIT_IP_MONITOR_STARTED=0
+
+monitor_exit_ip() {
+  log " >>> An2Kin >>> Fetching exit IP from $EXIT_IP_CHECK_URL"
+  local response
+  if response=$(curl -fsS --max-time 15 "$EXIT_IP_CHECK_URL"); then
+    if command -v jq >/dev/null 2>&1; then
+      echo "$response" | jq .
+    else
+      echo "$response"
+    fi
+    return 0
+  else
+    log " >>> An2Kin >>> WARNING: Could not fetch exit IP from $EXIT_IP_CHECK_URL"
+    return 1
+  fi
+}
+
+monitor_exit_ip_loop() {
+  # First check runs immediately after redsocks setup. If redsocks is still
+  # warming up, retry a few times (5 attempts, 10s apart) before settling into
+  # the regular interval, so a slow proxy start does not leave a 15-minute gap.
+  local attempt=0
+  while [ "$attempt" -lt 5 ]; do
+    if monitor_exit_ip; then
+      break
+    fi
+    attempt=$((attempt + 1))
+    sleep 10
+  done
+
+  while true; do
+    sleep "$EXIT_IP_MONITOR_INTERVAL"
+    monitor_exit_ip || true
+  done
+}
+
+start_exit_ip_monitor() {
+  if [ "$ENABLE_EXIT_IP_MONITOR" != "false" ] && [ "$EXIT_IP_MONITOR_STARTED" -eq 0 ]; then
+    EXIT_IP_MONITOR_STARTED=1
+    monitor_exit_ip_loop &
+    EXIT_IP_MONITOR_PID=$!
+    log " >>> An2Kin >>> Exit IP monitor started (PID $EXIT_IP_MONITOR_PID, every ${EXIT_IP_MONITOR_INTERVAL}s)"
+  fi
+}
+
 main() {
   while true; do
       setup_proxy
       check_ip
+      start_exit_ip_monitor
       log " >>> An2Kin >>> Starting binary..."
       "$BIN_SDK" start accept --token "$TOKEN" --device-name "$DEVNAME" status statistics &
       PID=$!

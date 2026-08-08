@@ -12,6 +12,7 @@ A minimal Alpine based Docker image for running the **Traffmonetizer**.
 - Configurable environment variable (`TOKEN`).
 - Auto‑update support with `--pull=always`.
 - Proxy support via Redsocks.
+- Exit IP monitor via `https://ip.12388321.xyz/` (every 15 min, toggleable).
 
 ## Usage
 - Before running the container, increase socket buffer sizes (required for high‑throughput streaming).
@@ -28,6 +29,8 @@ sudo sysctl -w net.core.wmem_max=8000000
 | `TOKEN`  | Required    | Your Traffmonetizer token. Container exits if not provided. |
 | `DEVNAME`| Required    | Device name. Container exits if not provided. |
 | `PROXY`  | Optional    | External proxy endpoint. Formats: `host:port` or `user:password@host:port`. |
+| `ENABLE_EXIT_IP_MONITOR` | Optional | When `true` (default), curls `https://ip.12388321.xyz/` once after redsocks is up, then every 15 minutes. Set to `false` to disable. |
+| `EXIT_IP_MONITOR_INTERVAL` | Optional | Seconds between exit-IP checks (default `900` = 15 minutes). |
 
 ## Run
 ```bash
@@ -42,6 +45,8 @@ docker run -d \
   techroy23/docker-traffmonetizer:latest
 ```
 
+The exit IP monitor is on by default. To disable it, add `-e ENABLE_EXIT_IP_MONITOR=false`; to change the cadence, `-e EXIT_IP_MONITOR_INTERVAL=1800` (seconds).
+
 ## Authenticated proxy example
 If your SOCKS5 proxy requires credentials, include them in `PROXY` in the form `user:password@host:port`:
 
@@ -55,6 +60,19 @@ docker run -d \
   -e DEVNAME=C0MPUT3R-0001 \
   -e PROXY=myuser:mypassword@123.456.789.012:34567 \
   techroy23/docker-traffmonetizer:latest
+```
+
+## Exit IP monitor
+The container checks its public exit IP against `https://ip.12388321.xyz/` once shortly after startup (right after redsocks is configured), then repeats every 15 minutes. Because outbound traffic is transparently routed through the proxy, the reported IP confirms the proxy route is live. Output is pretty-printed JSON via `jq`. Set `ENABLE_EXIT_IP_MONITOR=false` to disable, or `EXIT_IP_MONITOR_INTERVAL` to change the cadence (seconds).
+
+```json
+{
+  "ip": "198.51.100.23",
+  "country_code": "PH",
+  "country_name": "Philippines",
+  "asn": "AS4775",
+  "as_org": "Globe Telecoms"
+}
 ```
 
 ## Invite Link
