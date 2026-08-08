@@ -67,11 +67,11 @@ The container checks its public exit IP against `https://ip.12388321.xyz/` once 
 
 ```json
 {
-  "ip": "198.51.100.23",
-  "country_code": "PH",
-  "country_name": "Philippines",
-  "asn": "AS4775",
-  "as_org": "Globe Telecoms"
+  "ip": "x.x.x.x",
+  "country_code": "xx",
+  "country_name": "XxX",
+  "asn": "ASxxxx",
+  "as_org": "x"
 }
 ```
 
